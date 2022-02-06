@@ -1,4 +1,4 @@
-# wordle_guesser
+# Wordle_Guesser
 This repository is a simple implementation to assist in guessing words while playing wordle.
 
 ## How it works
