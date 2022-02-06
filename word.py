@@ -17,20 +17,38 @@ class Word():
             4: Letter()
         }
 
-    def update_viable_words(self, invalid_char: str=None, index: int=None):
+    def update_viable_words(self, invalid_char: str=None, index: int=None) -> None:
         '''
-        This function is used to update the viable words list based on information about each letter guessed throughout the game. When an greyed out character
-        is found we check to see if the index is pertinent. The index of the letter is pertinent when the letter has been verified in the word somewhere else
+        Case 1:
+        This function is used to update the viable words list based on information about each letter guessed throughout the game. When a greyed out character is
+        found we check to see if the index is pertinent. The index of the letter is pertinent when the letter has been verified in the word somewhere else 
         during the current guess or previous guesses. If the letter hasn't been verified to exist within the word then we can remove all words that contain that
         letter, however, if the character does exist in the word then we can only remove words with the invalid char at the given index.
 
-        Additional checks can be made based on the value of the word after guesses have been made. These TODO
+        Case 2:
+        Additional checks can be made based on the value of the word after the results have been conferred. Using information about verified letters we can
+        eliminate any word that doesn't have the verified letter at the specified index. Additionally if we have a letter that's been verified to exist
+        elswhere at a specific index we can remove any words that contain that letter at the current index.
+
+        Params
+        ------
+        invalid_char : str
+            The char within the wordle result that was greyed out. Default value is None as no parameters are needed for case 2.
+        index : int
+            The index of the invalid char in question. Default value is None as no parameters are needed for case 2.
+
+        Returns
+        -------
+        None
         '''
         words_to_remove = set()
 
-        # TODO: rewrite this entire function as there is duplicate logic
+        # grey letter has been found in the results
         if invalid_char is not None:
+            # assume we don't have to check the index until proven wrong
             check_index = False
+
+            # if the invalid character is a verified letter elswhere in the string or if it's verified elswhere at a given index then the index is pertinent
             for letter in self.letters.values():
                 if invalid_char == letter.verified_value:
                     check_index = True
@@ -39,7 +57,8 @@ class Word():
                 elif invalid_char in letter.verified_elsewhere:
                     check_index = True
                     break
-
+            
+            # add words to be removed based on invalid char information, by checking all remaining viable words
             for word in VIABLE_WORDS:
                 if check_index:
                     if invalid_char == word[index]:
@@ -48,8 +67,10 @@ class Word():
                 elif invalid_char in word:
                     words_to_remove.add(word)
         
+        # this is the second case after results have been conferred.
         else:
             for word in VIABLE_WORDS:
+                # check each letter in our word information
                 for index, letter_info in self.letters.items():
                     # verified letter doesn't match viable word
                     if letter_info.verified_value != '' and letter_info.verified_value != word[index]:
@@ -65,11 +86,26 @@ class Word():
                         elif char not in word:
                             words_to_remove.add(word)
                             break
-
+        
+        # remove words found in either case
         for word in words_to_remove:
             VIABLE_WORDS.remove(word)
 
-    def update_word(self, guess: str, result: str):
+    def update_word(self, guess: str, result: str) -> None:
+        '''
+        Once the results have been typed by the user this function is used to update word data as well as update viable words for any greyed out words.
+
+        Params
+        ------
+        guess : str
+            The user guess for the current iteration of the game.
+        result : str
+            The result given by wordle which is used to update the word data.
+
+        Returns
+        -------
+        None
+        ''' 
         for i in range(5):
             if result[i] == '-':
                 self.update_viable_words(guess[i], i)
@@ -83,12 +119,16 @@ class Word():
             else:
                 raise Exception(f'The result "{result[i]}" you gave is not formatted correctly.')
 
-    def get_word_suggestion(self):
+    def get_word_suggestion(self) -> None:
         '''
         This function creates a word suggestion based off of the user's previous guess data. This function first calculates a value for each viable word by
         summing the letter frequencies of each letter within the word. Additionally if a word contains all unique characters (meaning no duplicates) then the 
         words value gets a 2x multiplier because it should help eliminate more incorrect words from the viable words list. Whichever word has the best value is
         returned.
+
+        Returns
+        -------
+        None
         '''
         best_suggestion = ''
         best_value = 0
